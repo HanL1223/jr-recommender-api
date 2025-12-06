@@ -1,0 +1,124 @@
+/* Layout */
+body, html {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f7f7f7;
+}
+
+.page {
+  min-height: 100vh;
+}
+
+/* Top Bar */
+.topbar {
+  background: white;
+  padding: 15px 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.brand {
+  font-size: 22px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Containers */
+.container {
+  max-width: 900px;
+  margin: 30px auto;
+  padding: 0 15px;
+}
+
+.card {
+  background: white;
+  padding: 25px;
+  margin-bottom: 30px;
+  border-radius: 10px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+}
+
+h2 {
+  margin-top: 0;
+  color: #444;
+}
+
+/* Inputs */
+.input {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  margin-bottom: 15px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+/* Buttons */
+.btn {
+  width: 100%;
+  padding: 12px;
+  background: #0078ff;
+  border: none;
+  color: white;
+  font-weight: bold;
+  font-size: 15px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: #0064d6;
+}
+
+/* Recommendations */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 18px;
+}
+
+/* Product Card */
+.product-card {
+  display: flex;
+  gap: 12px;
+  padding: 15px;
+  border-radius: 10px;
+  background: #fafafa;
+  border: 1px solid #ddd;
+}
+
+.product-img {
+  width: 70px;
+  height: 70px;
+  background: #e5e5e5;
+  border-radius: 8px;
+}
+
+.product-name {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+}
+
+.score {
+  font-size: 13px;
+  color: #777;
+}
+
+.reason {
+  font-size: 12px;
+  margin-top: 5px;
+  color: #999;
+}
+
+/* JSON Box */
+.json-box {
+  margin-top: 20px;
+  background: #f3f3f3;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+pre {
+  font-size: 12px;
+  overflow-x: auto;
+}

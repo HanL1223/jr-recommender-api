@@ -1,0 +1,58 @@
+{
+  "model_name": "XGBoost_default",
+  "training_date": "2025-12-06T17:04:19.301967",
+  "valid_metrics": {
+    "ndcg@1": 0.9277232834279814,
+    "ndcg@3": 0.931380031092642,
+    "ndcg@5": 0.9434872201718059,
+    "ndcg@10": 0.9523007349416057,
+    "hit_rate@1": 0.9277232834279814,
+    "hit_rate@3": 0.9863190500774394,
+    "hit_rate@5": 0.9943211151264842,
+    "hit_rate@10": 0.9966442953020134,
+    "precision@1": 0.9277232834279814,
+    "precision@3": 0.45405265875064527,
+    "precision@5": 0.2901910170366547,
+    "precision@10": 0.19273176487941587,
+    "mrr": 0.9568708975588169
+  },
+  "test_metrics": {
+    "ndcg@1": 0.9240327952856777,
+    "ndcg@3": 0.9309628615862103,
+    "ndcg@5": 0.9425341604447338,
+    "ndcg@10": 0.9525596586869588,
+    "hit_rate@1": 0.9240327952856777,
+    "hit_rate@3": 0.9914168588265437,
+    "hit_rate@5": 0.9975659748911094,
+    "hit_rate@10": 0.9997437868306431,
+    "precision@1": 0.9240327952856777,
+    "precision@3": 0.4497822188060466,
+    "precision@5": 0.2876761465539329,
+    "precision@10": 0.19221538987103934,
+    "mrr": 0.9570194783011847
+  },
+  "params": {
+    "objective": "rank:ndcg",
+    "eval_metric": "ndcg",
+    "max_depth": 6,
+    "learning_rate": 0.1,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "min_child_weight": 1,
+    "reg_alpha": 0.0,
+    "reg_lambda": 1.0,
+    "verbosity": 0,
+    "seed": 42,
+    "n_estimators": 500,
+    "early_stopping_rounds": 50
+  },
+  "tuning_enabled": false,
+  "tuning_trials": 0,
+  "all_models": [
+    "XGBoost_default",
+    "PersonalFreq_0.2",
+    "PersonalFreq_0.3",
+    "PersonalFreq_0.5",
+    "Popularity"
+  ]
+}
