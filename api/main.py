@@ -29,7 +29,7 @@ app = FastAPI(title="Cafe Recommender API")
 origins = [
     "http://localhost:5173",
     "http://localhost:3000",
-    "https://jr-recommender-frontend.onrender.com",
+    "https://jr-recommender-api-frontend.onrender.com"
 ]
 
 app.add_middleware(
