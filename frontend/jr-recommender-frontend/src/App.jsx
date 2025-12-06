@@ -310,9 +310,11 @@ export default function App() {
     setError(null);
 
     try {
+      const API = import.meta.env.VITE_API_BASE;
+
       const url = isNewCustomer
-        ? `http://localhost:8000/popular?top_k=${topK}`
-        : `http://localhost:8000/recommend/${customerId}?top_k=${topK}`;
+        ? `${API}/popular?top_k=${topK}`
+        : `${API}/recommend/${customerId}?top_k=${topK}`;
 
       const res = await fetch(url);
       
