@@ -355,16 +355,16 @@ export default function App() {
       <style>{styles}</style>
       <div className="page">
         <header className="topbar">
-          <div className="brand">JR Café Recommender</div>
+          <div className="brand">JR Café</div>
         </header>
 
         <main className="container">
           <section className="card search-box">
-            <h2>Customer Lookup</h2>
+            <h2>Order Recommender</h2>
 
             <div className="input-group">
               <div className="input-wrapper">
-                <label>Customer ID</label>
+                <label>Membership Number</label>
                 <input
                   className="input"
                   placeholder="e.g. 123"
@@ -374,7 +374,7 @@ export default function App() {
               </div>
 
               <div className="input-wrapper" style={{ maxWidth: "140px" }}>
-                <label>Results</label>
+                <label>No. of items</label>
                 <input
                   className="input"
                   type="number"
@@ -402,7 +402,7 @@ export default function App() {
                 onClick={() => fetchRecommendations(true)}
                 disabled={loading}
               >
-                👋 New here? See popular picks
+                👋 New here? See popular picks 123
               </button>
             </div>
 

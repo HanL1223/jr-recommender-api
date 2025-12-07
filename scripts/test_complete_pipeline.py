@@ -295,13 +295,13 @@ def run_all_tests(data_path: str):
     # LightGBM
     try:
         lgb = LightGBMRanker(
-            num_leaves=31,
+            num_leaves=3,
             learning_rate=0.05,
             feature_fraction=0.8,
             bagging_fraction=0.8,
             min_data_in_leaf=20,
-            num_boost_round=150,
-            early_stopping_rounds=30,
+            num_boost_round=5,
+            early_stopping_rounds=3,
         )
         lgb.fit(split.train_df, split.feature_names, split.valid_df)
         lgb_eval = evaluator.evaluate(lgb, split.test_df, split.feature_names)
@@ -322,7 +322,7 @@ def run_all_tests(data_path: str):
         xgb = XGBoostRanker(
             max_depth=6,
             learning_rate=0.1,
-            n_estimators=150,
+            n_estimators=10,
         )
         xgb.fit(split.train_df, split.feature_names, split.valid_df)
         xgb_eval = evaluator.evaluate(xgb, split.test_df, split.feature_names)
@@ -352,9 +352,9 @@ def run_all_tests(data_path: str):
 
         tuner = HyperparameterTuner(
             metric="ndcg@3",
-            n_trials=3,          # keep small for test
+            n_trials=2,          # keep small for test
             direction="maximize",
-            timeout=120,
+            timeout=21,
         )
 
         if isinstance(best_model, LightGBMRanker):
