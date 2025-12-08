@@ -78,7 +78,7 @@ class RankingMetrics:
         # Detect true ML models → they declare `is_ml_model = True`
         if getattr(model, "is_ml_model", False):
             logger.info("Using predict_df (ML model)")
-            return model.predict_df(df[feature_names])
+            return model.predict_df(df)
 
         # Baseline models → row-by-row evaluation
         logger.info("Using predict() row-by-row (baseline model)")

@@ -357,8 +357,20 @@ class RecommenderPredictor:
 
         # Ensure all training features exist as columns
         for feat in self.feature_names:
-            if feat not in df.columns:
+            if feat not in df.columns:  
                 df[feat] = 0.0
+
+            # ---- CRITICAL FIX FOR LIGHTGBM ----
+        # Ensure customer_id exists (operational metadata)
+        df["customer_id"] = customer_id
+
+        # Create a stable order_idx for inference ranking
+        if "order_idx" not in df.columns:
+            df["order_idx"] = np.arange(len(df))
+
+        # Product must exist for recommendation output
+        if "product" not in df.columns:
+            df["product"] = df.index.astype(str)
 
         return df
 

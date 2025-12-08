@@ -42,6 +42,7 @@ class TrainingData:
 class TrainingDataBuilder:
 
     FEATURE_NAMES = [
+     #   "customer_id","order_idx",
         # History
         "in_history", "history_count", "log_history_count", "history_freq",
         "frequency_rank_pct", "recent_purchase_flag",

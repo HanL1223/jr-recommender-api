@@ -295,14 +295,27 @@ const styles = `
     font-size: 0.75rem;
     overflow-x: auto;
   }
+
+  const [topK, setTopK] = useState(1);
+  const [error, setError] = useState("");
+
+  const handleTopKChange = (e) => {
+  const value = Number(e.target.value);
+
+  if (value < 1 || value > 20) {
+    setError("Please enter a value between 1 and 20.");
+  } else {
+    setError("");
+    setTopK(value);
+  }
 `;
 
 export default function App() {
   const [customerId, setCustomerId] = useState("");
-  const [topK, setTopK] = useState(5);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
+
+  
 
   async function fetchRecommendations(isNewCustomer = false) {
     setLoading(true);
@@ -334,21 +347,35 @@ export default function App() {
 
   const getEmoji = (name) => {
     const lower = (name || "").toLowerCase();
-    if (lower.includes("coffee") || lower.includes("espresso") || lower.includes("latte")) return "☕";
+    if (lower.includes("coffee") || lower.includes("espresso") || lower.includes("latte")||lower.includes("babychino")||lower.includes("Mocha ") ||lower.includes("Flat White")) return "☕️";
     if (lower.includes("tea")) return "🍵";
     if (lower.includes("cake") || lower.includes("pastry")) return "🍰";
     if (lower.includes("croissant")) return "🥐";
     if (lower.includes("toast") || lower.includes("bread")) return "🍞";
     if (lower.includes("sandwich") || lower.includes("toastie")) return "🥪";
-    if (lower.includes("juice") || lower.includes("smoothie")) return "🥤";
-    if (lower.includes("chicken") || lower.includes("bao")) return "🍗";
+    if (lower.includes("juice") || lower.includes("smoothie")) return "🧃";
+    if (lower.includes("chicken") || lower.includes("bao")) return "🌭";
     if (lower.includes("fry") || lower.includes("wedge") || lower.includes("chip")) return "🍟";
     if (lower.includes("egg")) return "🍳";
     if (lower.includes("salad")) return "🥗";
-    return "✨";
+    return "🍽️";
   };
 
   const isColdStart = result?.model_used === "ColdStart" || result?.customer_id === null;
+
+  const [topK, setTopK] = useState(1);
+  const [error, setError] = useState("");
+
+const handleTopKChange = (e) => {
+  const value = Number(e.target.value);
+
+  if (value < 1 || value > 20) {
+    setError("Please enter a value between 1 and 20.");
+  } else {
+    setError("");
+    setTopK(value);
+  }
+};
 
   return (
     <>
@@ -360,7 +387,7 @@ export default function App() {
 
         <main className="container">
           <section className="card search-box">
-            <h2>Order Recommender</h2>
+            <h2>Order Menu Recommender</h2>
 
             <div className="input-group">
               <div className="input-wrapper">
@@ -381,10 +408,11 @@ export default function App() {
                   min="1"
                   max="20"
                   value={topK}
-                  onChange={(e) => setTopK(e.target.value)}
+                  onChange={handleTopKChange} 
                 />
               </div>
             </div>
+            
 
             <div className="btn-group">
               <button
@@ -402,7 +430,7 @@ export default function App() {
                 onClick={() => fetchRecommendations(true)}
                 disabled={loading}
               >
-                👋 New here? See popular picks 123
+                👋 New here? See popular picks
               </button>
             </div>
 
@@ -445,7 +473,7 @@ export default function App() {
                       <div className="product-img">{getEmoji(item.product)}</div>
                       <div className="product-info">
                         <div className="product-name">{item.product}</div>
-                        <div className="score">Score: {item.score.toFixed(2)}</div>
+                        {/* <div className="score">Score: {item.score.toFixed(2)}</div> */}
                         <div className="reason">{item.reason}</div>
                       </div>
                     </div>
