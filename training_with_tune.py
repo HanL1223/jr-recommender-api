@@ -74,7 +74,7 @@ def run_training_pipeline(
     project_id: str | None = None,
     query: str | None = None,
     tune: bool = False,
-    n_trials: int = 20,
+    n_trials: int = 50,
     timeout: int = 600,
     strict_validation: bool = False,
 ) -> dict:
@@ -198,7 +198,7 @@ def run_training_pipeline(
     # -------------------------------------------------------------------------
     logger.info("STEP 7: Training candidate models")
 
-    evaluator = RankingMetrics(k_values=[1, 3, 5, 10])
+    evaluator = RankingMetrics(k_values=[3, 5, 10])
     candidates = []
 
     def train_and_record(model, name):
@@ -458,7 +458,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train JR Recommender model")
 
     parser.add_argument("--source_type", default="csv")
-    parser.add_argument("--file_path")
+    parser.add_argument("--file_path",default = "data/raw/data_raw.csv")
     parser.add_argument("--project_id")
     parser.add_argument("--query")
     parser.add_argument("--tune", action="store_true")
