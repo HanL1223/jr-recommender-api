@@ -11,6 +11,8 @@ const styles = `
     --cream: #fdfbf7;
     --caramel: #c4a35a;
     --mocha: #5c4033;
+    --sage: #7d9a78;
+    --discovery: #6b8e7d;
   }
 
   html, body, #root { min-height: 100vh; width: 100%; }
@@ -51,7 +53,7 @@ const styles = `
 
   .container {
     width: 100%;
-    max-width: 900px;
+    max-width: 1000px;
     margin: 0 auto;
     padding: 3rem 1.5rem;
   }
@@ -177,10 +179,78 @@ const styles = `
     margin-left: 0.75rem;
   }
 
+  /* Split sections */
+  .recommendations-split {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 2rem;
+  }
+
+  @media (max-width: 768px) {
+    .recommendations-split {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .section-header h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--espresso);
+  }
+
+  .section-header .icon {
+    font-size: 1.25rem;
+  }
+
+  .section-badge {
+    font-size: 0.65rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.25rem;
+  }
+
+  .badge-favorites {
+    background: rgba(196, 163, 90, 0.2);
+    color: var(--mocha);
+  }
+
+  .badge-discovery {
+    background: rgba(107, 142, 125, 0.2);
+    color: var(--discovery);
+  }
+
+  .favorites-section {
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(196, 163, 90, 0.08), rgba(196, 163, 90, 0.02));
+    border-radius: 1rem;
+    border: 1px solid rgba(196, 163, 90, 0.15);
+  }
+
+  .discovery-section {
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(107, 142, 125, 0.08), rgba(107, 142, 125, 0.02));
+    border-radius: 1rem;
+    border: 1px solid rgba(107, 142, 125, 0.15);
+  }
+
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  .grid-small {
+    grid-template-columns: 1fr;
   }
 
   .product-card {
@@ -207,8 +277,26 @@ const styles = `
     box-shadow: 0 8px 24px rgba(44, 24, 16, 0.12);
   }
 
+  .product-card-compact {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 0.75rem;
+  }
+
+  .product-card-compact .emoji {
+    font-size: 2rem;
+    flex-shrink: 0;
+  }
+
+  .product-card-compact .product-info {
+    padding: 0;
+  }
+
   .product-img {
-    height: 120px;
+    height: 100px;
     background: linear-gradient(135deg, var(--caramel) 0%, var(--mocha) 100%);
     display: flex;
     align-items: center;
@@ -216,32 +304,63 @@ const styles = `
     font-size: 2.5rem;
   }
 
-  .product-info { padding: 1.25rem; }
+  .product-img.discovery-bg {
+    background: linear-gradient(135deg, var(--sage) 0%, var(--discovery) 100%);
+  }
+
+  .product-info { padding: 1rem; }
 
   .product-name {
     font-family: 'Fraunces', serif;
-    font-size: 1.0625rem;
+    font-size: 1rem;
     font-weight: 600;
     color: var(--espresso);
+    margin-bottom: 0.375rem;
+  }
+
+  .product-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     margin-bottom: 0.5rem;
+    flex-wrap: wrap;
   }
 
   .score {
     display: inline-block;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 500;
-    padding: 0.25rem 0.625rem;
+    padding: 0.2rem 0.5rem;
     background: rgba(196, 163, 90, 0.15);
     color: var(--mocha);
     border-radius: 1rem;
-    margin-bottom: 0.75rem;
+  }
+
+  .category-tag {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 500;
+    padding: 0.15rem 0.4rem;
+    background: rgba(44, 24, 16, 0.06);
+    color: var(--mocha);
+    border-radius: 0.25rem;
+  }
+
+  .new-tag {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 0.15rem 0.4rem;
+    background: var(--discovery);
+    color: white;
+    border-radius: 0.25rem;
   }
 
   .reason {
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     color: var(--mocha);
     opacity: 0.8;
-    line-height: 1.5;
+    line-height: 1.4;
   }
 
   .addon-section {
@@ -272,6 +391,20 @@ const styles = `
 
   .addon-card .emoji { font-size: 1.25rem; }
 
+  .excluded-info {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background: rgba(44, 24, 16, 0.03);
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--mocha);
+    opacity: 0.7;
+  }
+
+  .excluded-info strong {
+    font-weight: 500;
+  }
+
   .json-box {
     margin-top: 1.5rem;
     border-top: 1px solid rgba(44, 24, 16, 0.08);
@@ -295,14 +428,22 @@ const styles = `
     font-size: 0.75rem;
     overflow-x: auto;
   }
+
+  .empty-state {
+    text-align: center;
+    padding: 1.5rem;
+    opacity: 0.6;
+    font-size: 0.875rem;
+  }
 `;
 
 export default function App() {
   const [customerId, setCustomerId] = useState("");
-  const [topK, setTopK] = useState(5);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+
+  const API = import.meta.env.VITE_API_BASE || "http://localhost:8000";
 
   async function fetchRecommendations(isNewCustomer = false) {
     setLoading(true);
@@ -310,11 +451,14 @@ export default function App() {
     setError(null);
 
     try {
-      const API = import.meta.env.VITE_API_BASE;
-
-      const url = isNewCustomer
-        ? `${API}/popular?top_k=${topK}`
-        : `${API}/recommend/${customerId}?top_k=${topK}`;
+      let url;
+      if (isNewCustomer) {
+        // Cold start - use popular endpoint
+        url = `${API}/popular?top_k=5`;
+      } else {
+        // Use the split endpoint with 2 favorites + 3 discovery
+        url = `${API}/recommend/${customerId}/split?n_favorites=2&n_discovery=3&n_addons=2`;
+      }
 
       const res = await fetch(url);
       
@@ -324,7 +468,7 @@ export default function App() {
       }
       
       const data = await res.json();
-      setResult({ ...data, isNewCustomer });
+      setResult({ ...data, isNewCustomer, isSplit: !isNewCustomer });
     } catch (err) {
       setError(err.message);
     }
@@ -334,21 +478,175 @@ export default function App() {
 
   const getEmoji = (name) => {
     const lower = (name || "").toLowerCase();
-    if (lower.includes("coffee") || lower.includes("espresso") || lower.includes("latte")) return "☕";
-    if (lower.includes("tea")) return "🍵";
-    if (lower.includes("cake") || lower.includes("pastry")) return "🍰";
+    if (lower.includes("latte")) return "☕";
+    if (lower.includes("cappuccino")) return "☕";
+    if (lower.includes("flat white")) return "☕";
+    if (lower.includes("mocha")) return "☕";
+    if (lower.includes("coffee") || lower.includes("espresso")) return "☕";
+    if (lower.includes("americano")) return "☕";
+    if (lower.includes("tea") || lower.includes("chai")) return "🍵";
+    if (lower.includes("hot chocolate")) return "🍫";
+    if (lower.includes("cake") || lower.includes("brownie")) return "🍰";
+    if (lower.includes("muffin")) return "🧁";
     if (lower.includes("croissant")) return "🥐";
-    if (lower.includes("toast") || lower.includes("bread")) return "🍞";
-    if (lower.includes("sandwich") || lower.includes("toastie")) return "🥪";
+    if (lower.includes("toast") || lower.includes("bread") || lower.includes("banana bread")) return "🍞";
+    if (lower.includes("sandwich") || lower.includes("toastie") || lower.includes("panini")) return "🥪";
+    if (lower.includes("wrap")) return "🌯";
     if (lower.includes("juice") || lower.includes("smoothie")) return "🥤";
+    if (lower.includes("milkshake") || lower.includes("frappe")) return "🥛";
     if (lower.includes("chicken") || lower.includes("bao")) return "🍗";
     if (lower.includes("fry") || lower.includes("wedge") || lower.includes("chip")) return "🍟";
-    if (lower.includes("egg")) return "🍳";
-    if (lower.includes("salad")) return "🥗";
+    if (lower.includes("egg") || lower.includes("omelette")) return "🍳";
+    if (lower.includes("salad") || lower.includes("bowl")) return "🥗";
+    if (lower.includes("cookie") || lower.includes("biscuit")) return "🍪";
+    if (lower.includes("babychino") || lower.includes("babycino")) return "🍼";
     return "✨";
   };
 
-  const isColdStart = result?.model_used === "ColdStart" || result?.customer_id === null;
+  const renderSplitResults = () => {
+    const { favorites = [], discovery = [], addon_items = [], excluded_categories = [] } = result;
+
+    return (
+      <>
+        <div className="recommendations-split">
+          {/* Favorites Section */}
+          <div className="favorites-section">
+            <div className="section-header">
+              <span className="icon">❤️</span>
+              <h3>Your Usuals</h3>
+              <span className="section-badge badge-favorites">{favorites.length} items</span>
+            </div>
+            
+            {favorites.length > 0 ? (
+              <div className="grid grid-small">
+                {favorites.map((item, idx) => (
+                  <div key={idx} className="product-card-compact">
+                    <span className="emoji">{getEmoji(item.product)}</span>
+                    <div className="product-info">
+                      <div className="product-name">{item.product}</div>
+                      <div className="product-meta">
+                        <span className="score">{(item.score * 100).toFixed(0)}%</span>
+                        {item.category && <span className="category-tag">{item.category}</span>}
+                      </div>
+                      <div className="reason">{item.reason}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state">No previous purchases found</div>
+            )}
+          </div>
+
+          {/* Discovery Section */}
+          <div className="discovery-section">
+            <div className="section-header">
+              <span className="icon">✨</span>
+              <h3>Try Something New</h3>
+              <span className="section-badge badge-discovery">{discovery.length} items</span>
+            </div>
+            
+            {discovery.length > 0 ? (
+              <div className="grid">
+                {discovery.map((item, idx) => (
+                  <div key={idx} className="product-card">
+                    <div className="product-img discovery-bg">{getEmoji(item.product)}</div>
+                    <div className="product-info">
+                      <div className="product-name">{item.product}</div>
+                      <div className="product-meta">
+                        <span className="score">{(item.score * 100).toFixed(0)}%</span>
+                        <span className="new-tag">NEW</span>
+                        {item.category && <span className="category-tag">{item.category}</span>}
+                      </div>
+                      <div className="reason">{item.reason}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state">No new recommendations available</div>
+            )}
+
+            {excluded_categories.length > 0 && (
+              <div className="excluded-info">
+                <strong>Note:</strong> We filtered out {excluded_categories.join(", ")} items since you already have those in your usuals.
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Add-ons */}
+        {addon_items.length > 0 && (
+          <div className="addon-section">
+            <h3>🥐 Complete Your Order</h3>
+            <div className="addon-grid">
+              {addon_items.map((item, idx) => (
+                <div key={idx} className="addon-card">
+                  <span className="emoji">{getEmoji(item.product)}</span>
+                  <div>
+                    <strong>{item.product}</strong>
+                    <div style={{ fontSize: "0.75rem", opacity: 0.7 }}>{item.reason}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </>
+    );
+  };
+
+  const renderPopularResults = () => {
+    const { primary_items = [], addon_items = [] } = result;
+
+    return (
+      <>
+        <div className="cold-start-banner">
+          <span>👋</span>
+          <div>
+            <strong>Welcome!</strong> Here are our customer favorites to get you started.
+          </div>
+        </div>
+
+        {primary_items.length > 0 ? (
+          <div className="grid">
+            {primary_items.map((item, idx) => (
+              <div key={idx} className="product-card">
+                <div className="product-img">{getEmoji(item.product)}</div>
+                <div className="product-info">
+                  <div className="product-name">{item.product}</div>
+                  <div className="product-meta">
+                    <span className="score">{(item.score * 100).toFixed(0)}%</span>
+                    {item.category && <span className="category-tag">{item.category}</span>}
+                  </div>
+                  <div className="reason">{item.reason}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state">No recommendations found</div>
+        )}
+
+        {addon_items.length > 0 && (
+          <div className="addon-section">
+            <h3>You might also like</h3>
+            <div className="addon-grid">
+              {addon_items.map((item, idx) => (
+                <div key={idx} className="addon-card">
+                  <span className="emoji">{getEmoji(item.product)}</span>
+                  <div>
+                    <strong>{item.product}</strong>
+                    <div style={{ fontSize: "0.75rem", opacity: 0.7 }}>{item.reason}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </>
+    );
+  };
 
   return (
     <>
@@ -370,18 +668,7 @@ export default function App() {
                   placeholder="e.g. 123"
                   value={customerId}
                   onChange={(e) => setCustomerId(e.target.value)}
-                />
-              </div>
-
-              <div className="input-wrapper" style={{ maxWidth: "140px" }}>
-                <label>No. of items</label>
-                <input
-                  className="input"
-                  type="number"
-                  min="1"
-                  max="20"
-                  value={topK}
-                  onChange={(e) => setTopK(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && customerId && fetchRecommendations(false)}
                 />
               </div>
             </div>
@@ -392,7 +679,7 @@ export default function App() {
                 onClick={() => fetchRecommendations(false)}
                 disabled={loading || !customerId}
               >
-                {loading ? "Brewing…" : "Get Recommendations"}
+                {loading ? "Brewing…" : "Get My Recommendations"}
               </button>
 
               <span className="divider">or</span>
@@ -402,7 +689,7 @@ export default function App() {
                 onClick={() => fetchRecommendations(true)}
                 disabled={loading}
               >
-                👋 New here? See popular picks 123
+                👋 New here? See popular picks
               </button>
             </div>
 
@@ -416,63 +703,11 @@ export default function App() {
           {result && (
             <section className="card">
               <h2>
-                {result.isNewCustomer ? "Our Most Popular Items" : "Recommended For You"}
+                {result.isNewCustomer ? "Our Most Popular Items" : `Recommendations for #${result.customer_id}`}
                 <span className="model-badge">{result.model_used}</span>
               </h2>
 
-              {result.isNewCustomer && (
-                <div className="cold-start-banner">
-                  <span>👋</span>
-                  <div>
-                    <strong>Welcome!</strong> Here are our customer favorites to get you started.
-                  </div>
-                </div>
-              )}
-
-              {isColdStart && !result.isNewCustomer && (
-                <div className="cold-start-banner">
-                  <span>🔎</span>
-                  <div>
-                    <strong>Customer not found.</strong> Showing popular items instead.
-                  </div>
-                </div>
-              )}
-
-              {result.primary_items?.length > 0 ? (
-                <div className="grid">
-                  {result.primary_items.map((item, idx) => (
-                    <div key={idx} className="product-card">
-                      <div className="product-img">{getEmoji(item.product)}</div>
-                      <div className="product-info">
-                        <div className="product-name">{item.product}</div>
-                        <div className="score">Score: {item.score.toFixed(2)}</div>
-                        <div className="reason">{item.reason}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div style={{ textAlign: "center", padding: "2rem", opacity: 0.6 }}>
-                  No recommendations found
-                </div>
-              )}
-
-              {result.addon_items?.length > 0 && (
-                <div className="addon-section">
-                  <h3>You might also like</h3>
-                  <div className="addon-grid">
-                    {result.addon_items.map((item, idx) => (
-                      <div key={idx} className="addon-card">
-                        <span className="emoji">{getEmoji(item.product)}</span>
-                        <div>
-                          <strong>{item.product}</strong>
-                          <div style={{ fontSize: "0.75rem", opacity: 0.7 }}>{item.reason}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {result.isSplit ? renderSplitResults() : renderPopularResults()}
 
               <details className="json-box">
                 <summary>Show Raw API Output</summary>

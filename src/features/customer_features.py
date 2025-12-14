@@ -60,9 +60,8 @@ class CustomerProfile:
         This is used by RecommenderPredictor to construct
         per-(customer, product) feature rows at inference time.
 
-        NOTE:
-        - We **approximate** a few features used in training
-        - Any missing features will be zero-filled in the predictor
+    
+        Any missing features will be zero-filled in the predictor
         """
         features = {
             # History / volume

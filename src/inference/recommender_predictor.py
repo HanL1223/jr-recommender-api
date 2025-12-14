@@ -1,11 +1,13 @@
 """
-RecommenderPredictor
-====================
+RecommenderPredictor (V2 Compatible)
+====================================
 
 Production-ready unified recommendation predictor.
 
+V2 Update: Uses FeatureMatrixBuilderV2 to match TrainingDataBuilderV2 features.
+
 Key principles:
-- Uses the SAME feature engineering as TrainingDataBuilder via FeatureMatrixBuilder.
+- Uses the SAME feature engineering as TrainingDataBuilderV2 via FeatureMatrixBuilderV2.
 - No ad-hoc / partial feature logic at inference.
 - Ensures all training features (feature_names) are present in the matrix.
 - Supports ML model or fallback baseline model.
@@ -21,12 +23,12 @@ from typing import List, Optional, Dict, Any
 import pandas as pd
 import numpy as np
 
+# V2: Use discovery-optimized feature builder
 from src.features.feature_matrix_builder import FeatureMatrixBuilder
 
 logger = logging.getLogger(__name__)
 
 
-# ----------------------------------------------------------------------
 # OUTPUT DATA STRUCTURES
 # ----------------------------------------------------------------------
 @dataclass
@@ -44,15 +46,14 @@ class Prediction:
     addon_items: List[RecommendationItem]
 
 
-# ----------------------------------------------------------------------
 # MAIN PREDICTOR
 # ----------------------------------------------------------------------
 class RecommenderPredictor:
     """
-    Final unified predictor.
+    Final unified predictor (V2 compatible).
 
     Responsibilities:
-    - Construct ML feature matrix via FeatureMatrixBuilder
+    - Construct ML feature matrix via FeatureMatrixBuilderV2
     - Score with ML or baseline model
     - Generate human-friendly recommendation reasons
     - Add-on recommendations using product co-occurrence
@@ -81,13 +82,14 @@ class RecommenderPredictor:
         # If encoders not provided, rebuild them deterministically
         self.encoders = encoders or self._build_encoders_from_prepared(prepared_data)
 
-        # FeatureMatrixBuilder aligned 1:1 with TrainingDataBuilder
+        # V2: Use FeatureMatrixBuilderV2 with co-occurrence support
         self.feature_builder = FeatureMatrixBuilder(
             prepared_data=prepared_data,
             product_features=product_features,
             customer_profiles=customer_profiles,
             category_map=getattr(prepared_data, "category_map", None),
             encoders=self.encoders,
+            cooccurrence=getattr(product_features, "cooccurrence", None),  # V2: Pass co-occurrence
         )
 
         self.use_ml = ml_model is not None
@@ -95,7 +97,7 @@ class RecommenderPredictor:
         # Detect feature column names for reason generation
         self._detect_feature_columns()
 
-        logger.info("RecommenderPredictor initialized with ML=%s", bool(self.use_ml))
+        logger.info("RecommenderPredictor initialized (V2) with ML=%s", bool(self.use_ml))
 
     def _detect_feature_columns(self):
         """Detect actual feature column names for reason generation."""
@@ -103,16 +105,16 @@ class RecommenderPredictor:
         
         # Common patterns for purchase count features
         self._purchase_count_col = None
-        for pattern in ["purchase_count", "order_count", "buy_count", "num_purchases", 
-                        "customer_product_count", "hist_count", "frequency"]:
+        for pattern in ["purchase_count", "history_count", "order_count", "buy_count", 
+                        "num_purchases", "customer_product_count", "hist_count", "frequency"]:
             if pattern in feature_set:
                 self._purchase_count_col = pattern
                 break
         
         # Common patterns for popularity features
         self._popularity_col = None
-        for pattern in ["global_popularity", "popularity", "product_popularity", 
-                        "pop_score", "global_pop", "item_popularity"]:
+        for pattern in ["global_popularity", "popularity", "popularity_scaled",
+                        "product_popularity", "pop_score", "global_pop", "item_popularity"]:
             if pattern in feature_set:
                 self._popularity_col = pattern
                 break
@@ -120,15 +122,19 @@ class RecommenderPredictor:
         # Common patterns for recency features
         self._recency_col = None
         for pattern in ["days_since_last", "recency", "days_since", "last_purchase_days",
-                        "days_since_purchase", "recency_days"]:
+                        "days_since_purchase", "recency_days", "orders_since_last_purchase"]:
             if pattern in feature_set:
                 self._recency_col = pattern
                 break
         
+        # V2: Detect discovery features
+        self._cooccur_col = "cooccur_with_history" if "cooccur_with_history" in feature_set else None
+        self._archetype_match_col = "archetype_product_match" if "archetype_product_match" in feature_set else None
+        
         logger.info(f"Detected columns - purchase: {self._purchase_count_col}, "
-                    f"popularity: {self._popularity_col}, recency: {self._recency_col}")
+                    f"popularity: {self._popularity_col}, recency: {self._recency_col}, "
+                    f"cooccur: {self._cooccur_col}")
 
-    # ------------------------------------------------------------------
     # PUBLIC API
     # ------------------------------------------------------------------
     def recommend(self, customer_id: int, top_k: int = 5) -> Prediction:
@@ -149,7 +155,7 @@ class RecommenderPredictor:
         history = self.prepared_data.customer_histories.get(customer_id, [])
         purchased_products = self._extract_purchased_products(history)
 
-        # Build feature matrix
+        # Build feature matrix (V2 with discovery features)
         feature_df = self._build_feature_matrix(customer_id)
 
         # Score with appropriate model
@@ -192,7 +198,6 @@ class RecommenderPredictor:
         """
         return self._cold_start(top_k)
 
-    # ------------------------------------------------------------------
     # CUSTOMER PROFILE & HISTORY HELPERS
     # ------------------------------------------------------------------
     def _get_customer_profile(self, customer_id: int) -> Dict[str, Any]:
@@ -224,19 +229,25 @@ class RecommenderPredictor:
         for item in history:
             # Handle different history formats
             if isinstance(item, dict):
-                product = item.get("product") or item.get("product_name") or item.get("item")
+                # Check for basket format (list of products per order)
+                basket = item.get("basket", [])
+                if basket:
+                    for product in basket:
+                        if isinstance(product, str):
+                            counts[product] = counts.get(product, 0) + 1
+                else:
+                    # Single product format
+                    product = item.get("product") or item.get("product_name") or item.get("item")
+                    if product:
+                        counts[product] = counts.get(product, 0) + 1
             elif hasattr(item, "product"):
                 product = item.product
-            else:
-                continue
-            
-            if product:
-                counts[product] = counts.get(product, 0) + 1
+                if product:
+                    counts[product] = counts.get(product, 0) + 1
         
         return counts
 
-    # ------------------------------------------------------------------
-    # REASON GENERATION
+    # REASON GENERATION (V2 - with discovery reasons)
     # ------------------------------------------------------------------
     def _generate_reason(
         self, 
@@ -246,6 +257,7 @@ class RecommenderPredictor:
     ) -> str:
         """
         Generate a human-friendly reason for why this item is recommended.
+        V2: Includes discovery-specific reasons.
         """
         product = row.get("product", "")
         
@@ -272,26 +284,51 @@ class RecommenderPredictor:
                 else:
                     return "Based on your order history"
         
-        # 3. Check archetype-category match
+        # === V2: DISCOVERY REASONS ===
+        
+        # 3. Check if it's a variant of something they buy
+        has_variant = self._safe_get_numeric(row, "has_bought_variant")
+        if has_variant and has_variant > 0:
+            base = product.split(" (")[0] if " (" in product else product
+            return f"A new take on {base}"
+        
+        # 4. Check co-occurrence with history (V2 feature)
+        if self._cooccur_col:
+            cooccur = self._safe_get_numeric(row, self._cooccur_col)
+            if cooccur and cooccur > 0.3:
+                return "Pairs with your favorites"
+        
+        # 5. Check archetype-product match (V2 feature)
+        if self._archetype_match_col:
+            archetype_match = self._safe_get_numeric(row, self._archetype_match_col)
+            if archetype_match and archetype_match > 0:
+                return "Matches your taste"
+        
+        # 6. Check archetype-category match (fallback)
         archetype = profile.get("archetype", "")
         if archetype:
             category = self._get_product_category(product)
             if self._check_archetype_category_match(archetype, category, product):
                 return "Matches your taste"
         
-        # 4. Check popularity
+        # 7. Check preferred category
+        is_pref_cat = self._safe_get_numeric(row, "is_preferred_category")
+        if is_pref_cat and is_pref_cat > 0:
+            return "From your favorite category"
+        
+        # 8. Check popularity
         if self._popularity_col:
             popularity = self._safe_get_numeric(row, self._popularity_col)
-            if popularity and popularity > 0.5:
+            if popularity and popularity > 0.05:
                 return "Customer favorite"
         
-        # 5. Check recency
+        # 9. Check recency
         if self._recency_col:
             days_since = self._safe_get_numeric(row, self._recency_col)
             if days_since and 0 < days_since < 14:
                 return "Recently caught your eye"
         
-        # 6. Segment-based fallback
+        # 10. Segment-based fallback
         segment = profile.get("segment", "")
         if segment == "VIP":
             return "Curated for you"
@@ -300,7 +337,7 @@ class RecommenderPredictor:
         elif segment == "New":
             return "Great choice to try"
         
-        # 7. Score-based fallback
+        # 11. Score-based fallback
         score = row.get("score", 0)
         if score > 0.8:
             return "Top pick for you"
@@ -346,12 +383,12 @@ class RecommenderPredictor:
         search_text = f"{category} {product}".lower()
         return any(kw in search_text for kw in keywords)
 
-    # ------------------------------------------------------------------
-    # FEATURE MATRIX (via FeatureMatrixBuilder)
+    # FEATURE MATRIX (using FeatureMatrixBuilderV2)
     # ------------------------------------------------------------------
     def _build_feature_matrix(self, customer_id: int) -> pd.DataFrame:
         """
         Build ML-ready feature matrix for a given customer.
+        V2: Includes discovery features (co-occurrence, archetype match, etc.)
         """
         df = self.feature_builder.build(customer_id)
 
@@ -362,8 +399,7 @@ class RecommenderPredictor:
 
         return df
 
-    # ------------------------------------------------------------------
-    # ENCODERS (must match TrainingDataBuilder logic)
+    # ENCODERS
     # ------------------------------------------------------------------
     def _build_encoders_from_prepared(self, prepared_data) -> Dict[str, Dict[str, int]]:
         """Rebuild category/segment/archetype encoders."""
@@ -387,7 +423,6 @@ class RecommenderPredictor:
             "archetype": archetype_to_idx,
         }
 
-    # ------------------------------------------------------------------
     # ADD-ON RECOMMENDATIONS
     # ------------------------------------------------------------------
     def _get_addon_recommendations(
@@ -420,7 +455,6 @@ class RecommenderPredictor:
             for prod, lift in sorted_items
         ]
 
-    # ------------------------------------------------------------------
     # COLD START
     # ------------------------------------------------------------------
     def _cold_start(self, top_k: int) -> Prediction:

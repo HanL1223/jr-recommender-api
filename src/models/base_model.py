@@ -83,7 +83,7 @@ class BaseRecommender(ABC):
             f"{self.name} does not implement batch prediction (predict_df)."
         )
 
-    # Provided: Convert predicted scores → ranked recommendations
+    # Provided: Convert predicted scores -> ranked recommendations
     # -------------------------------------------
     def recommend(
         self,
@@ -120,14 +120,12 @@ class BaseRecommender(ABC):
 
         return recommendations
 
-    # -------------------------------------------
     # Metadata for MLflow / logging
     # -------------------------------------------
     def get_params(self) -> Dict[str, Any]:
         """Return training parameters or model metadata."""
         return {}
 
-    # -------------------------------------------
     # Save / load
     # -------------------------------------------
     def save(self, path: str) -> None:

@@ -1,13 +1,13 @@
 """
-Training Pipeline (Production-Ready)
-------------------------------------
-Implements full model training workflow:
+Training Pipeline (Production-Ready) - V2 Discovery Optimized
+--------------------------------------------------------------
+Implements full model training workflow with discovery features:
 
 1. Ingestion (ABC: CSV / BigQuery)
 2. Validation
 3. Preprocessing
 4. Feature extraction
-5. Training data construction
+5. Training data construction (V2 - with co-occurrence & archetype features)
 6. Temporal split
 7. Train baseline + ML models
 8. Select best pre-tuning model
@@ -15,10 +15,10 @@ Implements full model training workflow:
 10. Final model selection
 11. Artifact saving
 
-Compatible with:
-- LightGBMRanker
-- XGBoostRanker
-- All your ABC-based ingestion, preprocessing, and tuning modules.
+V2 Changes:
+- Uses TrainingDataBuilderV2 with discovery features
+- Passes co-occurrence matrix for cross-sell signal
+- Stratified negative sampling
 """
 
 import argparse
@@ -28,15 +28,16 @@ import json
 from pathlib import Path
 from datetime import datetime
 
-# -----------------------------------------------------------------------------
-# IMPORTS FROM YOUR REPO
-# -----------------------------------------------------------------------------
+# Import from src
 from src.data_ingestion.data_loader import IngestionFactory, DataLoader
 from src.data_ingestion.data_validator import ValidationFactory, DataValidator
 from src.data_ingestion.data_preprocessor import PreprocessingFactory
 from src.features.customer_features import CustomerFeatureExtractor
 from src.features.product_features import ProductFeatureExtractor
+
+# V2: Use discovery-optimized training data builder
 from src.features.training_data_builder import TrainingDataBuilder
+
 from src.training.data_splitter import TemporalDataSplitter
 
 from src.models.baseline_models import (
@@ -54,9 +55,7 @@ from src.tuning.model_tuning_strategy import (
     XGBoostTuningStrategy,
 )
 
-# -----------------------------------------------------------------------------
-# LOGGER
-# -----------------------------------------------------------------------------
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)-8s | %(message)s",
@@ -65,9 +64,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-# =============================================================================
-# MAIN PIPELINE
-# =============================================================================
+# Main Pipeline
+
 def run_training_pipeline(
     source_type: str = "csv",
     file_path: str | None = None,
@@ -82,9 +80,8 @@ def run_training_pipeline(
     Execute the full training pipeline.
     """
 
-    # -------------------------------------------------------------------------
     # STEP 1 — INGEST DATA
-    # -------------------------------------------------------------------------
+    
     logger.info("STEP 1: Ingestion")
 
     ingestion_args = {"source_type": source_type}
@@ -114,9 +111,9 @@ def run_training_pipeline(
         f"{raw.n_orders:,}",
     )
 
-    # -------------------------------------------------------------------------
+
     # STEP 2 — VALIDATE DATA
-    # -------------------------------------------------------------------------
+
     logger.info("STEP 2: Validation")
 
     validator = DataValidator(
@@ -129,9 +126,9 @@ def run_training_pipeline(
         logger.error("Validation failed. Halting pipeline.")
         return {"status": "failed_validation", "validation_report": report}
 
-    # -------------------------------------------------------------------------
+
     # STEP 3 — PREPROCESSING
-    # -------------------------------------------------------------------------
+
     logger.info("STEP 3: Preprocessing")
 
     preprocessor = PreprocessingFactory.create(method="sequence", min_orders=2)
@@ -144,9 +141,9 @@ def run_training_pipeline(
         f"{prepared.n_orders:,}",
     )
 
-    # -------------------------------------------------------------------------
+
     # STEP 4 — FEATURE EXTRACTION
-    # -------------------------------------------------------------------------
+
     logger.info("STEP 4: Feature extraction")
 
     cust_ext = CustomerFeatureExtractor()
@@ -155,12 +152,24 @@ def run_training_pipeline(
     prod_ext = ProductFeatureExtractor()
     product_features = prod_ext.extract(prepared)
 
-    # -------------------------------------------------------------------------
-    # STEP 5 — TRAINING DATA BUILD
-    # -------------------------------------------------------------------------
-    logger.info("STEP 5: Building training samples")
+    # V2: Log co-occurrence stats
+    n_cooccur = sum(len(v) for v in product_features.cooccurrence.values())
+    logger.info(
+        "Extracted features for %s customers, %s products, %s co-occurrence pairs",
+        f"{len(customer_profiles):,}",
+        f"{len(product_features.popularity):,}",
+        f"{n_cooccur:,}",
+    )
 
+
+    # STEP 5 — TRAINING DATA BUILD (V2)
+
+    logger.info("STEP 5: Building training samples (V2 - discovery optimized)")
+
+    # V2: Use discovery-optimized builder with co-occurrence
     builder = TrainingDataBuilder(negative_ratio=5)
+    builder.set_cooccurrence(product_features.cooccurrence)  # KEY: Pass co-occurrence!
+    
     training_data = builder.build(
         prepared_data=prepared,
         customer_profiles=customer_profiles,
@@ -172,10 +181,13 @@ def run_training_pipeline(
         f"{len(training_data.samples_df):,}",
         f"{len(training_data.feature_names):,}",
     )
+    
+    # V2: Log new discovery features
+    logger.info("Discovery features included: cooccur_with_history, cooccur_max, archetype_product_match")
 
-    # -------------------------------------------------------------------------
+
     # STEP 6 — TEMPORAL SPLIT
-    # -------------------------------------------------------------------------
+
     logger.info("STEP 6: Train/Valid/Test split")
 
     splitter = TemporalDataSplitter(valid_ratio=0.1, test_ratio=0.2)
@@ -193,9 +205,9 @@ def run_training_pipeline(
         f"{split.n_test_samples:,}",
     )
 
-    # -------------------------------------------------------------------------
+
     # STEP 7 — TRAIN CANDIDATE MODELS
-    # -------------------------------------------------------------------------
+
     logger.info("STEP 7: Training candidate models")
 
     evaluator = RankingMetrics(k_values=[1, 3, 5, 10])
@@ -267,9 +279,9 @@ def run_training_pipeline(
     except Exception as e:
         logger.warning("XGBoost unavailable: %s", e)
 
-    # -------------------------------------------------------------------------
+
     # STEP 8 — BEST MODEL (PRE-TUNING)
-    # -------------------------------------------------------------------------
+
     logger.info("STEP 8: Selecting best pre-tuning model")
 
     candidates.sort(key=lambda m: m["valid_metrics"]["ndcg@3"], reverse=True)
@@ -281,9 +293,9 @@ def run_training_pipeline(
         best_pre["valid_metrics"]["ndcg@3"],
     )
 
-    # -------------------------------------------------------------------------
+
     # STEP 9 — HYPERPARAMETER TUNING (Strategy Pattern)
-    # -------------------------------------------------------------------------
+
     logger.info("STEP 9: Hyperparameter tuning")
 
     strategy_map = {
@@ -323,9 +335,9 @@ def run_training_pipeline(
         }
         candidates.append(tuned_entry)
 
-    # -------------------------------------------------------------------------
+
     # STEP 10 — FINAL MODEL SELECTION
-    # -------------------------------------------------------------------------
+
     logger.info("STEP 10: Selecting final model")
 
     candidates.sort(key=lambda m: m["valid_metrics"]["ndcg@3"], reverse=True)
@@ -338,9 +350,8 @@ def run_training_pipeline(
         best_final["test_metrics"]["ndcg@3"],
     )
 
-    # -------------------------------------------------------------------------
-# STEP 11 — SAVE ARTIFACTS
-# -------------------------------------------------------------------------
+
+    # STEP 11 — SAVE ARTIFACTS
     logger.info("STEP 11: Saving model artifacts")
 
     output_dir = Path("models/artifacts")
@@ -349,9 +360,7 @@ def run_training_pipeline(
     model_path = output_dir / "recommender.pkl"
     info_path = output_dir / "model_info.json"
 
-    # ---------------------------------------------------------
     # Save trained model
-    # ---------------------------------------------------------
     with open(model_path, "wb") as f:
         pickle.dump(
             {
@@ -362,9 +371,7 @@ def run_training_pipeline(
             f,
         )
 
-    # ---------------------------------------------------------
     # Save metadata
-    # ---------------------------------------------------------
     model_info = {
         "model_name": best_final["name"],
         "training_date": datetime.now().isoformat(),
@@ -374,6 +381,7 @@ def run_training_pipeline(
         "tuning_enabled": tune,
         "tuning_trials": n_trials if tune else 0,
         "all_models": [c["name"] for c in candidates],
+        "version": "discovery_optimized",  # V2: Add version tag
     }
 
     with open(info_path, "w") as f:
@@ -381,9 +389,7 @@ def run_training_pipeline(
 
     logger.info("Model + metadata saved.")
 
-    # ---------------------------------------------------------
     # Save additional required artifacts
-    # ---------------------------------------------------------
     with open(output_dir / "product_features.pkl", "wb") as f:
         pickle.dump(product_features, f)
 
@@ -401,11 +407,36 @@ def run_training_pipeline(
 
     logger.info("Saved: product_features, customer_profiles, prepared_data, encoders, category_map")
 
-     # -------------------------------------------------------------------------
-    # STEP 12 — PROFESSIONAL HUMAN-READABLE SUMMARY
-    # -------------------------------------------------------------------------
+
+    # STEP 12 — FEATURE IMPORTANCE ANALYSIS (V2)
+    
+    logger.info("STEP 12: Feature importance analysis")
+    
+    if hasattr(best_final["model"], 'model') and hasattr(best_final["model"].model, 'feature_importance'):
+        importance = best_final["model"].model.feature_importance(importance_type='gain')
+        feat_imp = sorted(zip(feature_names, importance), key=lambda x: -x[1])
+        
+        logger.info("\nTop 10 Features by Importance:")
+        logger.info("-" * 40)
+        for feat, imp in feat_imp[:10]:
+            logger.info(f"  {feat:30s}: {imp:,.1f}")
+        
+        # V2: Check discovery features specifically
+        discovery_feats = ['cooccur_with_history', 'cooccur_max', 'archetype_product_match']
+        logger.info("\nDiscovery Feature Importance:")
+        logger.info("-" * 40)
+        for feat in discovery_feats:
+            if feat in feature_names:
+                idx = feature_names.index(feat)
+                logger.info(f"  {feat:30s}: {importance[idx]:,.1f}")
+            else:
+                logger.info(f"  {feat:30s}: NOT FOUND")
+
+ 
+    # STEP 13 — PROFESSIONAL HUMAN-READABLE SUMMARY
+
     logger.info("\n" + "=" * 72)
-    logger.info("FINAL TRAINING SUMMARY")
+    logger.info("FINAL TRAINING SUMMARY (V2 - Discovery Optimized)")
     logger.info("=" * 72)
 
     logger.info("Best Model")
@@ -450,12 +481,9 @@ def run_training_pipeline(
        
 
 
-
-# =============================================================================
 # CLI ENTRYPOINT
-# =============================================================================
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Train JR Recommender model")
+    parser = argparse.ArgumentParser(description="Train JR Recommender model (V2)")
 
     parser.add_argument("--source_type", default="csv")
     parser.add_argument("--file_path")

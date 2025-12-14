@@ -17,7 +17,6 @@ from .base_model import BaseRecommender
 logger = logging.getLogger(__name__)
 
 
-# ======================================================================
 # POPULARITY BASELINE  (NO predict_df → avoids ML path in RankingMetrics)
 # ======================================================================
 class PopularityRecommender(BaseRecommender):
@@ -34,7 +33,7 @@ class PopularityRecommender(BaseRecommender):
         self.popularity_scores: Dict[str, float] = {}
         self._is_fitted: bool = False
 
-    # ---------------------- fit ----------------------
+    #fit
     def fit(self, train_df, feature_names: List[str], **kwargs):
         logger.info(f"Fitting {self.name} model")
 
@@ -55,7 +54,7 @@ class PopularityRecommender(BaseRecommender):
         logger.info(f"Learned popularity for {len(self.popularity_scores)} product")
         return self
 
-    # ---------------------- predict ----------------------
+    #predict
     def predict(
         self,
         customer_id: int,
@@ -73,8 +72,6 @@ class PopularityRecommender(BaseRecommender):
             dtype=float,
         )
 
-    # ❗ IMPORTANT: REMOVED predict_df() so evaluation uses baseline path
-
     def get_params(self) -> Dict[str, Any]:
         return {
             "model_type": "popularity",
@@ -82,8 +79,7 @@ class PopularityRecommender(BaseRecommender):
         }
 
 
-# ======================================================================
-# PERSONAL FREQUENCY BASELINE (predict_df is appropriate here)
+# PERSONAL FREQUENCY BASELINE
 # ======================================================================
 class PersonalFrequencyRecommender(BaseRecommender):
     """
@@ -109,7 +105,7 @@ class PersonalFrequencyRecommender(BaseRecommender):
 
         logger.info(f"PersonalFrequencyRecommender initialised (smoothing={smoothing})")
 
-    # ---------------------- fit ----------------------
+    #fit
     def fit(
         self,
         train_df: pd.DataFrame,
@@ -148,7 +144,7 @@ class PersonalFrequencyRecommender(BaseRecommender):
 
         return self
 
-    # ---------------------- predict ----------------------
+    #predict
     def predict(
         self,
         customer_id: int,
@@ -171,7 +167,6 @@ class PersonalFrequencyRecommender(BaseRecommender):
 
         return np.array(scores, dtype=float)
 
-    # predict_df is OK here because RankingMetrics will detect the full row structure
     def predict_df(self, df: pd.DataFrame) -> np.ndarray:
         if not self._is_fitted:
             raise RuntimeError("Model not fitted. Call fit() first.")

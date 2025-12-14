@@ -79,8 +79,8 @@ class LightGBMRanker(BaseRecommender):
 
         logger.info(f"{self.name} initialized (num_leaves={num_leaves}, lr={learning_rate})")
 
-    # -------------------------------------------------------------------------
-    #                     FACTORY METHOD FOR OPTUNA TUNING
+    # Factory Method of Optuna
+    # Refinement needed - Enable GPU,wider parameter range
     # -------------------------------------------------------------------------
     @classmethod
     def from_params(cls, params: Dict[str, Any]) -> "LightGBMRanker":
@@ -102,10 +102,8 @@ class LightGBMRanker(BaseRecommender):
             num_boost_round=params.get("num_boost_round", 500),
             early_stopping_rounds=params.get("early_stopping_rounds", 50),
         )
-
-    # -------------------------------------------------------------------------
-    #                                FIT MODEL
-    # -------------------------------------------------------------------------
+    
+    #Fit
     def fit(
         self,
         train_df: pd.DataFrame,
@@ -179,9 +177,7 @@ class LightGBMRanker(BaseRecommender):
 
         return self
 
-    # -------------------------------------------------------------------------
-    #                                PREDICT
-    # -------------------------------------------------------------------------
+
     def predict(
         self,
         customer_id: int,
@@ -203,18 +199,15 @@ class LightGBMRanker(BaseRecommender):
         X = df[self.feature_names].values
         return self.model.predict(X, num_iteration=self.model.best_iteration)
 
-    # -------------------------------------------------------------------------
-    #                          EXPLANATION / IMPORTANCE
-    # -------------------------------------------------------------------------
+    #Feature importance
+    #By gain, currently no use for downstream
     def get_feature_importance(self) -> Dict[str, float]:
         if not self._is_fitted:
             return {}
         importance = self.model.feature_importance(importance_type="gain")
         return dict(zip(self.feature_names, importance))
 
-    # -------------------------------------------------------------------------
-    #                              PARAMS / LOGGING
-    # -------------------------------------------------------------------------
+
     def get_params(self) -> Dict[str, Any]:
         params = self.params.copy()
         params["num_boost_round"] = self.num_boost_round
