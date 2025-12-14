@@ -958,5 +958,5 @@ recommender_model_202511/
 
 For questions, open an issue on the repository.
 
-**Author:** Han L  
-**Repository:** https://github.com/HanL1223/recommender_model_202511
+## Credit
+**Project Repository:** [https://github.com/HanL1223/recommender_model_202511](https://github.com/HanL1223/JR_Recommender)
