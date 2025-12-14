@@ -271,7 +271,7 @@ def recommend_split(
             raise HTTPException(status_code=404, detail=f"Customer {customer_id} not found")
         
         # Get more recommendations than needed so we can split
-        total_needed = (n_favorites + n_discovery) * 2  # Get extra to ensure we have enough of each
+        total_needed = max((n_favorites + n_discovery) * 2,30) # Get extra to ensure we have enough of each
         pred = predictor.recommend(customer_id=customer_id, top_k=max(total_needed, 10))
         
         # Get customer's purchase history
